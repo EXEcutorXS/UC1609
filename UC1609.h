@@ -8,8 +8,8 @@
 #define UC1609_WIDTH 192
 #define UC1609_HEIGHT 64
 
-#define BUFFER_SIZE (UC1609_WIDTH*UC1609_HEIGHT/8)
-#define UC16_9_CMD_INVERION
+#define UC1609_BUFFER_SIZE (UC1609_WIDTH*UC1609_HEIGHT/8)
+#define UC1609_CMD_INVERION
 
 #define UC1609_CMD_SCROLL 0b01000000
 #define UC1609_CMD_INVERSION 0b10100110
@@ -42,4 +42,10 @@ void UC1609_HardwareReset();
 void UC1609_SoftwareReset();
 void UC1609_Scroll (uint8_t lines);
 void UC1609_SetInversion (uint8_t invert);
+void UC1609_DrawBitmap(unsigned char* buf);
+void UC1609_PutPixel(uint8_t x, uint8_t y);
+void UC1609_DrawLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
+void UC1609_DrawDottedLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
+void UC1609_DrawRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
+void UC1609_DrawFilledRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 #endif

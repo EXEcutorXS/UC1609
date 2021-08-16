@@ -5,7 +5,7 @@ extern DMA_HandleTypeDef hdma_spi1_tx;
 extern SPI_HandleTypeDef hspi1;
 
 
-uint8_t buffer[BUFFER_SIZE];
+uint8_t buffer[UC1609_BUFFER_SIZE];
 uint16_t cursor;
 
 SPI_HandleTypeDef* hspi;
@@ -87,14 +87,14 @@ void UC1609_UpdateScreen ()
 	UC1609_SetXY (0, 0);
 	HAL_GPIO_WritePin (csPort, csPin, 0);
 	HAL_GPIO_WritePin (cdPort, cdPin, 1);
-	HAL_SPI_Transmit (hspi, buffer, BUFFER_SIZE, 1000);
+	HAL_SPI_Transmit (hspi, buffer, UC1609_BUFFER_SIZE, 1000);
 	HAL_GPIO_WritePin (csPort, csPin, 1);
 	sendCommand (UC1609_CMD_ENABLE);
 }
 
 void UC1609_Clean ()
 {
-	for (uint16_t i = 0; i < BUFFER_SIZE; ++i)
+	for (uint16_t i = 0; i < UC1609_BUFFER_SIZE; ++i)
 		buffer[i] = 0;
 }
 
@@ -122,7 +122,7 @@ void UC1609_PutString (char *c)
 {
 	while (*c)
 		{
-			cursor %= BUFFER_SIZE;
+			cursor %= UC1609_BUFFER_SIZE;
 			if (*c == 0xD0 || *c == 0xD1)
 				{
 					UC1609_PutRuC (c);
@@ -143,5 +143,70 @@ void UC1609_Scroll (uint8_t lines)
 {
 lines%=64;
 sendCommand(UC1609_CMD_SCROLL|lines);
+}
 
+void UC1609_DrawBitmap(uint8_t *buf) {
+	memcpy(buffer, buf, sizeof(buffer));
+}
+
+void UC1609_PutPixel(uint8_t x, uint8_t y) {
+	buffer[(x + (y/8)*UC1609_WIDTH)%UC1609_BUFFER_SIZE] |= 1 << (y % 8);
+}
+
+void UC1609_DrawLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
+	if (x2==x1 && y2==y1)
+		{
+		UC1609_PutPixel(x1, y1);
+		return;
+		}
+	if(x2<x1)
+		{
+			uint8_t temp = x2;
+			x2=x1;
+			x1=temp;
+		}
+	if(y2<y1)
+			{
+				uint8_t temp = y2;
+				y2=y1;
+				y1=temp;
+			}
+	if (x2 - x1 > y2 - y1) {
+		for (uint8_t i = x1; i < x2 + 1; ++i) {
+			UC1609_PutPixel(i, y1 + (y2 - y1) * (i - x1) / (x2 - x1));
+		}
+	} else {
+		for (uint8_t i = y1; i < y2 + 1; ++i) {
+			UC1609_PutPixel(x1 + (x2 - x1) * (i - y1) / (y2 - y1), i);
+		}
+	}
+}
+
+void UC1609_DrawDottedLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
+	if (x2==x1 && y2==y1)
+		{
+		UC1609_PutPixel(x1, y1);
+		return;
+		}
+	if (x2 - x1 > y2 - y1) {
+			for (uint8_t i = x1; i < x2 + 1; i+=2) {
+				UC1609_PutPixel(i, y1 + (y2 - y1) * (i - x1) / (x2 - x1));
+			}
+		} else {
+			for (uint8_t i = y1; i < y2 + 1; i+=2) {
+				UC1609_PutPixel(x1 + (x2 - x1) * (i - y1) / (y2 - y1), i);
+			}
+		}
+}
+
+void UC1609_DrawRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
+	UC1609_DrawLine(x1, y1, x1, y2);
+	UC1609_DrawLine(x2, y1, x2, y2);
+	UC1609_DrawLine(x1, y1, x2, y1);
+	UC1609_DrawLine(x1, y2, x2, y2);
+}
+
+void UC1609_DrawFilledRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
+	for (uint8_t i = x1; i < x2+1; ++i)
+		UC1609_DrawLine(i, y1, i, y2);
 }
