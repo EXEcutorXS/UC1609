@@ -68,6 +68,7 @@ else
 	UC1609_Scroll(0);
 }
 
+// HAL Func
 void UC1609_SetXY (uint8_t x, uint8_t y)
 {
 	sendCommand (0b00000000 | (x & 0xF));
@@ -75,6 +76,7 @@ void UC1609_SetXY (uint8_t x, uint8_t y)
 	sendCommand (0b10110000 | y);
 }
 
+// In buffer
 void UC1609_SetPos (uint8_t x, uint8_t y)
 {
 	cursor = x * 6 + UC1609_WIDTH * y;
